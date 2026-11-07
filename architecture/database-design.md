@@ -27,7 +27,7 @@
 | `asset` | `id` PK, content_hash, kind, object_key, mime, bytes, duration_ms nullable, locale nullable, rights_reference | Unique object_key; index content_hash. Immutable object keys, byte count positive. Rights reference records our ownership/license. No blobs in database. |
 | `step_asset` | (lesson_id, version, step_id, role, asset_id) PK, asset_id FK | Composite FK step; index asset_id for retention/reference checks. Roles include guide_vi, target_en, hint, visual, media, captions, transcript, feedback. |
 | `progress_attempt` | `id` client UUID PK, child_id FK, lesson_id/version FK, status, started_at, received_at, completed_at nullable | Index (child_id, lesson_id, version, started_at); status active/completed/abandoned. Same ID with different child/version is rejected. |
-| `attempt_event` | `event_id` UUID PK, attempt_id FK, child_id FK, sequence, step_id nullable, type, outcome nullable, assisted, active_ms, client_at, received_at | Unique (attempt_id, sequence); index (child_id, received_at); step FK resolved through attempt lesson/version. Validate event child matches attempt child. No unbounded free-text payload. |
+| `attempt_event` | `event_id` UUID PK, attempt_id FK, child_id FK, sequence, step_id nullable, type, payload JSON, outcome nullable, assisted, active_ms, client_at, received_at | Unique (attempt_id, sequence); index (child_id, received_at); step FK resolved through attempt lesson/version. Validate event child matches attempt child. No unbounded free-text payload. |
 | `child_lesson_progress` | (child_id, lesson_id, version) PK, completed_at nullable, first_response_correct, answered_checks, last_attempt_id FK | Derived projection, rebuildable from validated attempts; counts nonnegative, correct ≤ answered. Never overwrite completion with an incomplete attempt. |
 | `reward_definition` | `key` PK, original artwork_asset_id FK, eligibility_rule_version | Published eligibility rule immutable. No monetary value or random paid reward. |
 | `reward_grant` | `id` PK, child_id FK, reward_key FK, source_attempt_id FK, granted_at | Unique (child_id, reward_key) for lifetime MVP sticker; index source_attempt_id. Repeat lessons do not mint duplicates. |
@@ -41,6 +41,24 @@ Retain versions/assets referenced by attempts or offline support policy. Unpubli
 ## Attempts, scoring and offline synchronization
 
 **Inferred — original transaction model:** An attempt belongs to one child and immutable lesson version. Server checks account ownership and step membership for each batch, including duplicate IDs. Events can arrive out of order: store valid envelopes but defer projection until contiguous sequence and valid transitions exist. Return missing-sequence information; do not award a reward from a partial stream. A duplicate with identical canonical payload is acknowledged; a duplicate ID/sequence with changed payload is rejected as conflict. Server-generated completion/reward is authoritative.
+
+### Event payload and server validation
+
+**Inferred — original contract:** `attempt_event.payload` is a bounded object selected by event type; reject unknown keys, invalid types, negative/nonfinite durations, and IDs absent from the pinned manifest. The common envelope in the engine spec is unchanged. Payloads are:
+
+| Event | Required payload | Server rule |
+|---|---|---|
+| `lesson_started`, `lesson_completed`, `step_started`, `step_completed` | `{}` | Validate ordered transitions; derive completion and outcome from prior accepted evidence, never a client success flag. |
+| `answer_submitted` | `{"choiceId":"ball"}` | Require a check step and a member of its `choices`; compare with pinned `answerId` to derive correctness. First accepted answer determines first-response accuracy; reject contradictory outcome. |
+| `hint_shown` | `{"level":1}` | Integer level 1–3 on an interactive step; subsequent check completion is assisted. |
+| `media_started` | `{"playbackRunId":"client-uuid"}` | Require a media step; create a fresh run with zero position, played time and seeks. Replay creates a new run. |
+| `media_progress` | `{"playbackRunId":"client-uuid","positionMs":1000,"playedMs":1000}` | Require an active run; position is bounded by published asset duration, cumulative played time is nondecreasing and cannot exceed active elapsed time since run start. Emit periodically and before end/seek; exclude paused time and seek jumps from played time. |
+| `media_seeked` | `{"playbackRunId":"client-uuid","fromMs":1000,"toMs":5000}` | Require active run and positions within asset duration; increment the run seek count. Any seek disqualifies this run from completion. |
+| `media_ended` | `{"playbackRunId":"client-uuid","positionMs":10000,"playedMs":10000,"seekCount":0}` | Require a started run, prior progress, final position at published duration, cumulative played time at least duration and no seek events or reported seeks. Apply the same progress bounds. Otherwise record participation only, without step completion; offer replay. |
+| `asset_failed` | `{"assetId":"guide","phase":"narration"}` | Resolve asset in current step; phase enum loading/narration/media. Failure alone cannot complete a step. After unlock, narration failure may allow accessible Continue to input; media failure offers Retry/exit, never media completion. |
+| `audio_unlock_failed` | `{}` | Only while unlocking; retain retry gate and do not accept step completion. |
+
+Only media assets require positive published `duration_ms` for these checks. A missing duration blocks publication. All media evidence must refer to the same step/run; reject mismatched runs and contradictory counters. These checks establish consistency of client-reported playback, not independent proof of actual listening, viewing or absence of unreported seeks on an offline client. Model/errorless completion remains a client-reported participation transition; no accuracy is inferred.
 
 Within one transaction, validate a contiguous transition, persist events, update the attempt/progress projection and insert eligible reward with uniqueness protection. Event sequences are per attempt, so simultaneous devices use different attempts and cannot overwrite each other. Treat backward clock jumps as client metadata, not ordering. A completed attempt cannot be rewritten; replay starts a new attempt or emits no learning events in replay mode.
 
