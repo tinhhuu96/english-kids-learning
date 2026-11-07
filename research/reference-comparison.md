@@ -1,18 +1,85 @@
-# Reference Comparison — Pilot (preliminary)
+# Reference Comparison — Secondary Public Sources
 
-Only Starfall was investigated in the pilot. Rows for the secondary references are **[H] hypotheses from general product knowledge**. They must be verified in the next phase before we rely on them.
+Date: 2026-11-07. Scope: Lingokids, Duolingo ABC, and Duolingo, compared with the Starfall Letter A pilot. **[C]** means confirmed by a public page or store listing; it confirms what the publisher says, not hands-on behavior inside an app. **[C-code]** means found only in a captured bundle (none used here). **[H]** means unverified or an original design inference. No account was created and no app was installed. All descriptions and recommendations are original wording.
 
-| Dimension | Starfall (pilot, [C]) | Lingokids [H] | Duolingo ABC [H] | Duolingo [H] | Implication for us |
-|---|---|---|---|---|---|
-| Platform | Web, canvas | Native app (+ web) | Native app | App + web | Web-first PWA, tablet and phone |
-| Instruction language | English VO only | Multi-language UI | English | Learner's native language | **Vietnamese VO for instructions, English for targets** |
-| Lesson unit | One letter = lesson + mini-game | Themed short games | Short lessons in a path | Short lessons in a path | Short lessons (3–5 min) in a visual path |
-| Wrong answers | Not possible (errorless) | Gentle | Gentle retry | Retry with correction | Errorless → gentle-error progression |
-| Rewards | Animation + praise | Collectibles / avatar | Stars, path progress | XP, streaks, leagues | Stars + stickers; **no streak pressure or competition** for ages 3–6 |
-| Progress | None per child (anonymous) | Per child profile | Per child | Per user | Per-child profile under a parent account |
-| Parent role | None in-activity | Parent area | Parent gate | n/a | Parent gate + simple report in Vietnamese |
+## Method and evidence
 
-## Open verification tasks
+I read the four Starfall pilot files before editing this comparison. For each secondary web page below, I ran REA `capture-browser-scenario` in a fresh headless Chrome session with no cookies or login, a 200 ms settle step, and end-of-step DOM and URL capture. Raw JSON is in the run scratch directory only. The REA evidence IDs document successful captures; a DOM capture of a marketing page establishes the published claim, not the in-app interaction. No third-party media or lesson text was committed.
 
-- Confirm the Lingokids and Duolingo ABC reward and feedback patterns through public materials or hands-on use. These are native apps, so there is no network inspection.
-- Confirm which of them support Vietnamese instructions.
+The exact REA invocation was `rea capture-browser-scenario "$scenario" --format json`, where `scenario` was the following compact JSON with the listed URL substituted for `URL` (the first Lingokids exploratory capture used the same fields without `capture` and a 1000 ms wait):
+
+```json
+{"browser":{"mode":"launch","executable_path":"/usr/bin/google-chrome"},"start_url":{"url":"URL"},"actions":[{"step_id":"observe","action":"wait_for_timeout","duration_ms":200}],"capture":{"at_end":["dom","url"]}}
+```
+
+| Public URL passed as `URL` | REA evidence ID |
+|---|---|
+| https://lingokids.com/playlearning-curriculum | `ev_1caccf01c2b91eb2259aa324111b8b3b7c476c0cf8c60ef82af2e627c3c15cff` |
+| https://lingokids.com/press/new-lingokids-feature-proves-90-effective-in-improving-childrens-skill-learning-abilities | `ev_e4c29185798979197210f6d91dbd41bcd25bad065e2f48ef21da8669c0c86281` |
+| https://lingokids.com/why-lingokids/parents-area | `ev_b61ea72eaabf76387c183175a0230eeb8ce5293638d3f01ef3d38606c428ad14` |
+| https://abc.duolingo.com/how-we-teach | `ev_21c98b5ee542b85936b9b76ba6ca394ad76b7675a301ab6f0bc9487622f11cb6` |
+| https://apps.apple.com/us/app/learn-to-read-duolingo-abc/id1440502568 | `ev_0850bb9fe9dee9be4b5a317e3988ced45aa4fd26e8e8650678996736ebb49a1c` |
+| https://www.duolingo.com/abc-privacy | `ev_adb02d91b7f7426b8454b8a060f723b6f0d7e74c73d6a701bc06389c5da44685` |
+| https://blog.duolingo.com/duolingo-101-how-to-learn-a-language-on-duolingo/ | `ev_1b34f5415a3add5d33f505b7568674b3ad2aa706627a1b28bc9b780137c1ee66` |
+| https://blog.duolingo.com/how-user-reports-improve-course-content/ | `ev_0eb290ff490d7a70f2f8ae7aa1b74dfca24eff2ecf0e4f69c916f1c97d333374` |
+| https://blog.duolingo.com/achievement-badges/ | `ev_fe3d05af2e75bf593663665b98be77ce90c7ca2ce8d19a205adc20b283cf5c5c` |
+
+No static bundle analysis was needed: the public pages describe product behavior, while the native app implementations remain inaccessible in this scope. **[H]** No internal lesson JSON schema, progress API, audio asset timing, or client-side state machine can be established from these pages.
+
+## Product evidence and MVP implications
+
+### Lingokids — preschool curriculum and learning experience
+
+- **Lesson structure / flow.** [C] Its structured Lessons area is described as an initial assessment, 8–10 video/game units, then review and a final assessment, spread over multiple sessions. The announced subjects include literacy, math, and English language learning at preschool, kindergarten, and first-grade readiness levels ([Lingokids Lessons announcement](https://lingokids.com/press/new-lingokids-feature-proves-90-effective-in-improving-childrens-skill-learning-abilities)). [C] The broader curriculum offers songs, stories, videos, and interactive activities across many topics ([curriculum](https://lingokids.com/playlearning-curriculum)). **Recommendation:** [H] For ages 3–6, use a much smaller unit: one spoken goal, two or three play steps, then a gentle check, repeatable over short sessions.
+- **Audio / instructions.** [C] Songs, podcasts, and listening skills appear in the public curriculum ([curriculum](https://lingokids.com/playlearning-curriculum)). [H] The exact spoken directions, voice language, replay control, and audio timing inside a game are unknown. **Recommendation:** [H] Give the child a Vietnamese spoken instruction and separate English target audio, both replayable from large icons.
+- **Right/wrong feedback.** [C] The published lesson flow includes diagnostic and final assessments ([announcement](https://lingokids.com/press/new-lingokids-feature-proves-90-effective-in-improving-childrens-skill-learning-abilities)). [H] Its response to a correct or incorrect tap, retry rules, and whether every game even grades answers are unknown. **Recommendation:** [H] Use immediate visual and sound acknowledgement, then a calm replay and hint after a miss.
+- **Progress / rewards.** [C] The Parents Area describes a Progress Center after five activities, showing activity counts and favored subjects or skills ([Parents Area](https://lingokids.com/why-lingokids/parents-area)). [H] Child-facing points, collectibles, and completion animations were not verified. **Recommendation:** [H] Show a simple completed-picture trail for the child; give parents counts and concepts practised.
+- **Parent features / login boundary.** [C] The Parents Area describes screen-time controls, profiles, and switches for types of content; its page says multiple child profiles are a Plus feature ([Parents Area](https://lingokids.com/why-lingokids/parents-area)). [H] The precise account wall, purchase flow, parent gate, and what an unauthenticated child can open were not exercised. **Recommendation:** [H] Put settings and reports behind an adult gate, with no child-facing subscription prompt.
+- **Technical / observable data.** [H] The published sequence suggests conceptual entities `lesson → unit → activity → assessment` and `child → completed activity → practised skill`; these are design abstractions, **not** observed app records. [H] Storage, scoring formula, offline caching, and per-step events are unknown. **Recommendation:** [H] Store typed step and response records under a parent-managed child profile, with local cache for interrupted sessions.
+
+### Duolingo ABC — early literacy and phonics
+
+- **Lesson structure / flow.** [C] The teaching page says lessons take five minutes or less and learners can begin at one of nine levels; its curriculum covers phonics, phonemic awareness, comprehension, fluency, and vocabulary ([how we teach](https://abc.duolingo.com/how-we-teach)). [C] The store listing describes tracing, drag-and-drop activities, and interactive stories ([App Store](https://apps.apple.com/us/app/learn-to-read-duolingo-abc/id1440502568)). **Recommendation:** [H] Start with sound recognition and a small tap or drag practice; defer English reading and spelling until children have the oral vocabulary.
+- **Audio / instructions.** [C] The teaching page describes stories with narration and reading along with a narrator ([how we teach](https://abc.duolingo.com/how-we-teach)). [H] In-game instruction language, exact prompts, and narration replay controls are unknown. **Recommendation:** [H] Keep Vietnamese guidance separate from English sounds and use a replay button without requiring reading.
+- **Right/wrong feedback.** [C] The curriculum explicitly includes interactive questions within stories ([how we teach](https://abc.duolingo.com/how-we-teach)). [H] Exact correct/wrong screens, retry policy, and whether mistakes block progression are not established by the public page or store listing. **Recommendation:** [H] Allow a second try, then demonstrate the answer with audio and invite a low-pressure retry.
+- **Progress / rewards.** [C] The store listing says mini games and rewards motivate children and that lessons follow a learning sequence ([App Store](https://apps.apple.com/us/app/learn-to-read-duolingo-abc/id1440502568)). [H] The exact reward icon, currency, progress visualization, and scoring formula were not verified. **Recommendation:** [H] Celebrate completion of a concept rather than speed or a daily streak.
+- **Parent features / login boundary.** [C] Duolingo's ABC privacy notice says a parent sets up the app, can control settings and delete app data from an adult-oriented screen, and that an email is optional during registration ([ABC privacy](https://www.duolingo.com/abc-privacy)). [H] The exact adult gate and availability of a parent progress report were not verified. [H] The mobile onboarding and any feature boundary after setup remain unknown because no account or app was used. **Recommendation:** [H] Ask the adult for only a child nickname and age band, then make learning accessible without child credentials.
+- **Technical / observable data.** [C] The public method describes nine starting levels and a cumulative path ([how we teach](https://abc.duolingo.com/how-we-teach)). [H] A conceptual `level → lesson → activity/story` structure follows from that description; it is not an observed payload. [H] Local progress format, audio assets, and telemetry are unknown. **Recommendation:** [H] Represent each item as a typed content record with audio IDs, expected responses, and a recorded completion state.
+
+### Duolingo — progress and reward patterns
+
+- **Lesson structure / flow.** [C] Duolingo describes units of short lessons arranged on a learning path, with exercises that become more demanding and later review of earlier material ([Duolingo guide](https://blog.duolingo.com/duolingo-101-how-to-learn-a-language-on-duolingo/)). **Recommendation:** [H] Use a visual route of completed concepts, but let a parent revisit any completed activity.
+- **Audio / instructions.** [C] Its public guide lists listening and speaking exercises, speaker controls in illustrated exercises, and stories with audio in some courses ([Duolingo guide](https://blog.duolingo.com/duolingo-101-how-to-learn-a-language-on-duolingo/)). [H] The exact language and audio behavior for a particular course or anonymous web session are unknown. **Recommendation:** [H] Put all child directions in spoken Vietnamese and let them hear English targets on demand.
+- **Right/wrong feedback.** [C] The public guide says practice lessons target earlier mistakes; Duolingo describes grading answers as correct or incorrect after checking an exercise ([Duolingo guide](https://blog.duolingo.com/duolingo-101-how-to-learn-a-language-on-duolingo/), [feedback/reporting article](https://blog.duolingo.com/how-user-reports-improve-course-content/)). [H] Exact animations and penalty behavior can vary by current course and subscription and were not tested. **Recommendation:** [H] Keep immediate correction but remove penalties for preschool learners.
+- **Progress / rewards.** [C] The guide describes path progress, XP for completed learning actions, a day-based streak, and a course score; the achievements article describes milestone badges and personal records ([Duolingo guide](https://blog.duolingo.com/duolingo-101-how-to-learn-a-language-on-duolingo/), [achievements](https://blog.duolingo.com/achievement-badges/)). **Recommendation:** [H] Celebrate finished lessons and mastered sounds privately; avoid daily streak pressure, league ranking, and exchangeable currency for ages 3–6.
+- **Parent features / login boundary.** [C] The guide mentions friends and family features and says a profile saves progress across devices ([Duolingo guide](https://blog.duolingo.com/duolingo-101-how-to-learn-a-language-on-duolingo/)). [H] A preschool-specific parent dashboard was not found in these sources, so its existence is unknown. [H] How many lessons an anonymous web visitor can finish and which rewards require login were not tested. **Recommendation:** [H] Provide a parent-only summary of recent practice and sound recognition, without social features.
+- **Technical / observable data.** [H] The public UI implies conceptual entities `course → unit → path node → exercise` plus `learner → completion / XP / streak / badge`; these are **not** observed API schemas. [H] Storage, scoring rules, and reward-event payloads remain unknown. **Recommendation:** [H] Track concept mastery separately from rewards so reward tuning cannot corrupt learning progress.
+
+## Comparison across the seven research focus areas
+
+The Starfall column is based on the public Letter A page and the pilot's [feature inventory](feature-inventory.md), [interaction flows](interaction-flows.md), and [technical evidence](technical-evidence.md). Starfall [C-code] claims below are retained from the pilot controller inspection; all other [C] claims link to public sources.
+
+| Focus area | Starfall | Lingokids | Duolingo ABC | Duolingo |
+|---|---|---|---|---|
+| 1. Interactive lesson structure | [C] One Letter A activity with a guided sequence; [C-code] practice game follows ([activity](https://www.starfall.com/h/abcs/letter-a/)). | [C] Assessment → 8–10 video/game units → review and final check ([Lessons](https://lingokids.com/press/new-lingokids-feature-proves-90-effective-in-improving-childrens-skill-learning-abilities)). | [C] Short lessons and interactive stories across nine entry levels ([method](https://abc.duolingo.com/how-we-teach)). | [C] Short exercises grouped into units on a path ([guide](https://blog.duolingo.com/duolingo-101-how-to-learn-a-language-on-duolingo/)). |
+| 2. Audio-first instructions | [C-code] Per-step narration and spoken game direction ([activity](https://www.starfall.com/h/abcs/letter-a/)). | [C] Songs and listening content; [H] game directions unknown ([curriculum](https://lingokids.com/playlearning-curriculum)). | [C] Narrated stories; [H] exact game directions unknown ([method](https://abc.duolingo.com/how-we-teach)). | [C] Speaker and listening exercises; [H] course-specific directions unknown ([guide](https://blog.duolingo.com/duolingo-101-how-to-learn-a-language-on-duolingo/)). |
+| 3. Touch-friendly patterns | [C-code] Tap and drag in the Letter A activity ([activity](https://www.starfall.com/h/abcs/letter-a/)). | [C] Interactive games; [H] target sizes/gestures unknown ([curriculum](https://lingokids.com/playlearning-curriculum)). | [C] Tracing and dragging ([App Store](https://apps.apple.com/us/app/learn-to-read-duolingo-abc/id1440502568)). | [C] Tap choices and speaker buttons shown in guide ([guide](https://blog.duolingo.com/duolingo-101-how-to-learn-a-language-on-duolingo/)). |
+| 4. Correct / incorrect feedback | [C-code] The sort auto-routes tiles; no wrong state ([activity](https://www.starfall.com/h/abcs/letter-a/)). | [H] Exact answer response unknown. | [H] Exact answer response unknown. | [C] Checked exercises receive correct/incorrect grading ([feedback article](https://blog.duolingo.com/how-user-reports-improve-course-content/)). |
+| 5. Navigation and completion | [C] Next appears after a step; Close exits ([activity](https://www.starfall.com/h/abcs/letter-a/)). | [C] Structured Lessons span sessions ([Lessons](https://lingokids.com/press/new-lingokids-feature-proves-90-effective-in-improving-childrens-skill-learning-abilities)); [H] in-app controls unknown. | [C] Cumulative learning sequence ([method](https://abc.duolingo.com/how-we-teach)); [H] back/skip controls unknown. | [C] Path and review of completed lessons ([guide](https://blog.duolingo.com/duolingo-101-how-to-learn-a-language-on-duolingo/)). |
+| 6. Media loading / frontend | [C] Canvas activity with an up-front asset load ([activity](https://www.starfall.com/h/abcs/letter-a/)). | [H] App delivery and caching unknown. | [C] Publisher says offline play is available; [H] cache design unknown ([App Store](https://apps.apple.com/us/app/learn-to-read-duolingo-abc/id1440502568)). | [H] Load strategy and internal frontend data unknown. |
+| 7. Responsive / accessibility | [C] Fixed-ratio canvas with a public video alternative ([activity](https://www.starfall.com/h/abcs/letter-a/)). | [H] App screen reader and viewport behavior unknown. | [H] App screen reader and viewport behavior unknown. | [H] Course-specific accessibility and viewport behavior unknown. |
+
+## What we adopt / adapt / avoid for a Vietnamese preschool MVP
+
+- **Adopt:** [H] A large start control, short audio-led steps, immediate response to each action, and a visible completion point. Record each step as content data rather than as a fixed animation timeline.
+- **Adapt:** [H] Use the path idea as a small picture trail that shows *concepts learned*, with a parent-controlled replay. Use separate Vietnamese instruction audio and English target audio; do not require the child to read instructions.
+- **Adapt:** [H] Use an easy first try for exploration, then a gentle recognition check. On a miss, replay the sound, give a visual cue, and allow retry; avoid errorless practice as the only assessment.
+- **Adopt:** [H] A parent-only view with activity counts, recently practised sounds, and an age-appropriate session limit. Let the child start a cached activity without account interactions on the child screen.
+- **Avoid:** [H] Daily streaks, public competition, loss of attempts, shop currency, ads, and subscription prompts in the child flow. These reward attendance or spending rather than listening and understanding.
+- **Avoid:** [H] Any copied brand names, characters, illustrations, sound files, lesson text, reward wording, or visual layout. Commission original art and voice work and write original Vietnamese prompts.
+
+## Limits to resolve through later permitted testing
+
+- [H] Native app lesson screens, exact right/wrong effects, login gates, parental controls, and progress persistence were not exercised. Public marketing and store descriptions may change or omit edge cases.
+- [H] No public page supplied a trustworthy in-app API or schema. The conceptual structures above are design inferences only.
+- [H] The Duolingo guide and ABC privacy page describe their publication-time behavior; current course, platform, and subscription variants may differ.
